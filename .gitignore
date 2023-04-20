@@ -1,0 +1,86 @@
+# Secrets
+[Ss]ecrets/
+.[Ss]ecrets/
+*.pem
+*.key
+
+# Environment
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Visual Studio Code
+.vscode/
+
+# Visual Studio
+.vs/
+
+# JetBrains
+.idea/
+
+# Docker
+.dockerignore
+
+# Python
+__pycache__/
+
+# TypeScript
+*.tsbuildinfo
+
+# JavaScript
+node_modules/
+.npm/
+npm-debug.log*
+.pnp/
+.pnp.js
+.pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ESLint
+.eslintcache
+
+# NextJS
+.next/
+.swc/
+
+# Coverage
+[Cc]overage/
+.[Cc]overage/
+
+# Logs
+[Ll]og/
+.[Ll]og/
+*.log
+
+# Artifacts
+[Dd]ist/
+[Bb]uild/
+[Pp]ublish/
+[Dd]ebug/
+[Rr]elease/
+[Dd]ebug[Rr]elease/
+[Rr]elease[Dd]ebug/
+[Tt]arget/
+[Bb]in/
+[Oo]bj/
+[Oo]bject/
+[Oo]ut/
+[Pp]kg/
+
+# Cache
+[Cc]ache/
+.[Cc]ache/
+*.cache
+
+# Temporary
+[Tt]mp/
+.[Tt]mp/
+*.tmp
+[Tt]emp/
+.[Tt]emp/
+*.temp
+
+# Miscellaneous
+.DS_STORE

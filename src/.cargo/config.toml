@@ -1,0 +1,8 @@
+[build]
+target = "riscv64gc-unknown-none-elf"
+# Linker script
+rustflags = ["-Clink-arg=-Tlds/virt.lds"]
+
+[target.riscv64gc-unknown-none-elf]
+# Name of the bare-metal RV64GC C compiler
+linker = "riscv64-elf-gcc"
