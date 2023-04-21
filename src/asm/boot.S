@@ -16,6 +16,8 @@ STACK_END: .dword __stack_end
 # Allocatable and executable
 .section .text.init, "ax"
 
+# Exported functions
+
 .global _start
 _start:
     # Halt if not on HART #0
