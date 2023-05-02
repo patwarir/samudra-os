@@ -9,11 +9,11 @@ extern "C" {
 
 /* Extern Assembly constants */
 
-extern const uintptr_t STACK_START, STACK_END;
+extern const ptr_t STACK_START, STACK_END;
 
 /* Extern Assembly functions */
 
-extern void halt(void);
+extern void __attribute__((noreturn)) halt(void);
 
 #ifdef __cplusplus
 }

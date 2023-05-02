@@ -1,7 +1,9 @@
 use core::ffi::{c_uchar, CStr};
 
+pub const NEWLINE: &str = "\r\n";
+
 #[no_mangle]
-pub static NEWLINE: &[c_uchar] = b"\r\n\0";
+pub static C_NEWLINE: &[c_uchar] = b"\r\n\0";
 
 pub const UART_ADDRESS: usize = 0x1000_0000;
 
@@ -15,7 +17,7 @@ pub fn uart_init() {
 }
 
 #[no_mangle]
-pub fn uart_put_char(c: c_uchar) {
+pub fn uart_put_c_uchar(c: c_uchar) {
     let ptr = UART_ADDRESS as *mut c_uchar;
     unsafe {
         ptr.write_volatile(c);
@@ -24,7 +26,7 @@ pub fn uart_put_char(c: c_uchar) {
 
 pub fn uart_put_str(s: &str) {
     for c in s.bytes() {
-        uart_put_char(c);
+        uart_put_c_uchar(c);
     }
 }
 
@@ -32,7 +34,7 @@ pub fn uart_put_str(s: &str) {
 pub fn uart_put_c_string(s: *const c_uchar) {
     let s = unsafe { CStr::from_ptr(s as *const i8) };
     for c in s.to_bytes() {
-        uart_put_char(*c);
+        uart_put_c_uchar(*c);
     }
 }
 
@@ -41,7 +43,7 @@ pub fn uart_put_uint(i: usize) {
     if (i / 10) != 0 {
         uart_put_uint(i / 10);
     }
-    uart_put_char((i % 10) as u8 + b'0');
+    uart_put_c_uchar((i % 10) as u8 + b'0');
 }
 
 #[no_mangle]
@@ -50,17 +52,17 @@ pub fn uart_put_uint_hex(i: usize) {
         uart_put_uint_hex(i / 16);
     }
     let r = i % 16;
-    uart_put_char(r as u8 + if r < 10 { b'0' } else { b'A' - 10 });
+    uart_put_c_uchar(r as u8 + if r < 10 { b'0' } else { b'A' - 10 });
 }
 
 #[no_mangle]
-pub fn uart_put_int(mut i: isize) {
+pub fn uart_put_sint(mut i: isize) {
     if i < 0 {
-        uart_put_char(b'-');
+        uart_put_c_uchar(b'-');
         i = -i;
     }
     if (i / 10) != 0 {
-        uart_put_int(i / 10);
+        uart_put_sint(i / 10);
     }
-    uart_put_char((i % 10) as u8 + b'0');
+    uart_put_c_uchar((i % 10) as u8 + b'0');
 }

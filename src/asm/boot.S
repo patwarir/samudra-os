@@ -31,7 +31,7 @@ _start:
     # Prevent linker from assuming it's already set
 .option push
 .option norelax
-    la gp, __global_pointer
+    la gp, __global_pointer$
 .option pop
 
     # Zero all bytes in the BSS section

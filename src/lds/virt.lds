@@ -36,7 +36,7 @@ SECTIONS {
     } >ram AT>ram :text
 
     /* Exported, pointer to start of the global constants and variables */
-    PROVIDE(__global_pointer = .);
+    PROVIDE(__global_pointer$ = .);
 
     /* Global (readonly) constants */
     .rodata : ALIGN(4K) {
