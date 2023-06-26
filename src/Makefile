@@ -4,13 +4,15 @@ CC=riscv64-elf-gcc
 # Architecture: RV64GC, ABI: Hard float (lp64d)
 CFLAGS=-march=rv64gc -mabi=lp64d -mcmodel=medany
 # Static, no standard library
-CFLAGS+=-static -ffreestanding -nostartfiles -nodefaultlibs -nostdlib -fno-rtti -fno-exceptions
-CFLAGS+=-Wall -Wextra -Wpedantic -std=c17 -std=c++17
+CFLAGS+=-static -ffreestanding -nostartfiles -nodefaultlibs -nostdlib -fno-exceptions
+CFLAGS+=-Wall -Wextra -Wpedantic -std=c17
+
+# CXXFLAGS=$(CFLAGS) -fno-rtti -std=c++17
 
 ifeq ($(TARGET),debug)
 	CFLAGS+=-O0 -g
 else
-	CFLAGS+=-O0
+	CFLAGS+=-O3
 endif
 
 INCLUDES=$(wildcard include/*.h)

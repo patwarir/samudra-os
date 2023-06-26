@@ -1,9 +1,6 @@
-use core::ffi::{c_uchar, CStr};
+use core::ffi::{c_char, c_uchar, CStr};
 
 pub const NEWLINE: &str = "\r\n";
-
-#[no_mangle]
-pub static C_NEWLINE: &[c_uchar] = b"\r\n\0";
 
 pub const UART_ADDRESS: usize = 0x1000_0000;
 
@@ -17,7 +14,7 @@ pub fn uart_init() {
 }
 
 #[no_mangle]
-pub fn uart_put_c_uchar(c: c_uchar) {
+pub extern "C" fn uart_put_c_uchar(c: c_uchar) {
     let ptr = UART_ADDRESS as *mut c_uchar;
     unsafe {
         ptr.write_volatile(c);
@@ -31,15 +28,20 @@ pub fn uart_put_str(s: &str) {
 }
 
 #[no_mangle]
-pub fn uart_put_c_string(s: *const c_uchar) {
-    let s = unsafe { CStr::from_ptr(s as *const i8) };
+pub extern "C" fn uart_put_c_string(s: *const c_uchar) {
+    if s.is_null() {
+        uart_put_str("<null_ptr>");
+        return;
+    }
+
+    let s = unsafe { CStr::from_ptr(s as *const c_char) };
     for c in s.to_bytes() {
         uart_put_c_uchar(*c);
     }
 }
 
 #[no_mangle]
-pub fn uart_put_uint(i: usize) {
+pub extern "C" fn uart_put_uint(i: usize) {
     if (i / 10) != 0 {
         uart_put_uint(i / 10);
     }
@@ -47,7 +49,7 @@ pub fn uart_put_uint(i: usize) {
 }
 
 #[no_mangle]
-pub fn uart_put_uint_hex(i: usize) {
+pub extern "C" fn uart_put_uint_hex(i: usize) {
     if (i / 16) != 0 {
         uart_put_uint_hex(i / 16);
     }
@@ -56,7 +58,7 @@ pub fn uart_put_uint_hex(i: usize) {
 }
 
 #[no_mangle]
-pub fn uart_put_sint(mut i: isize) {
+pub extern "C" fn uart_put_sint(mut i: isize) {
     if i < 0 {
         uart_put_c_uchar(b'-');
         i = -i;

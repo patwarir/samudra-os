@@ -7,10 +7,6 @@
 extern "C" {
 #endif // __cplusplus
 
-/* Extern Assembly constants */
-
-extern const ptr_t STACK_START, STACK_END;
-
 /* Extern Assembly functions */
 
 extern void __attribute__((noreturn)) halt(void);

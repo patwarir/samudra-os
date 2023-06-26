@@ -17,7 +17,8 @@ typedef uchar_t * string_t;
 
 typedef uintptr_t ptr_t;
 
-#define null NULL
+#define null_ptr NULL
+#define null_char '\0'
 
 #ifdef __cplusplus
 }

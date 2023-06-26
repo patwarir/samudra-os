@@ -7,12 +7,6 @@
 
 .section .data
 
-.global STACK_START
-STACK_START: .dword __stack_start
-
-.global STACK_END
-STACK_END: .dword __stack_end
-
 # Allocatable and executable
 .section .text.init, "ax"
 

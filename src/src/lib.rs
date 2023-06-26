@@ -10,11 +10,7 @@ extern "C" {
 
     /* Extern C functions */
 
-    pub fn call_me_from_rust();
-
-    pub fn c_calls_halt() -> !;
-
-    pub fn c_raises_interrupt();
+    pub fn call_c_from_rust();
 }
 
 #[panic_handler]
@@ -29,7 +25,9 @@ pub fn panic_handler(info: &core::panic::PanicInfo) -> ! {
         uart::uart_put_str(uart::NEWLINE);
     }
 
-    unsafe { halt(); }
+    unsafe {
+        halt();
+    }
 }
 
 #[no_mangle]
@@ -38,15 +36,16 @@ pub extern "C" fn k_main() -> ! {
 
     uart::uart_put_str("Hello, World from Rust!\r\n");
 
-    unsafe { call_me_from_rust(); }
+    unsafe {
+        call_c_from_rust();
+    }
 
     // Enters panic handler
     // let i1 = Some(1isize);
     // let i2 = Some(0isize);
     // uart::uart_put_sint(i1.unwrap() / i2.unwrap());
 
-    // Enters trap vector
-    // unsafe { c_raises_interrupt(); }
-
-    unsafe { c_calls_halt(); }
+    unsafe {
+        halt();
+    }
 }
