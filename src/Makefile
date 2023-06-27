@@ -2,12 +2,12 @@
 CC=riscv64-elf-gcc
 
 # Architecture: RV64GC, ABI: Hard float (lp64d)
-CFLAGS=-march=rv64gc -mabi=lp64d -mcmodel=medany
+CFLAGS=-march=rv64gc_zifencei_zicsr_zba_zbb_zbc_zbs -mabi=lp64d -mcmodel=medany
 # Static, no standard library
-CFLAGS+=-static -ffreestanding -nostartfiles -nodefaultlibs -nostdlib -fno-exceptions
+CFLAGS+=-static -ffreestanding -nostartfiles -nodefaultlibs -nostdlib -nolibc -fno-exceptions
 CFLAGS+=-Wall -Wextra -Wpedantic -std=c17
 
-# CXXFLAGS=$(CFLAGS) -fno-rtti -std=c++17
+# CXXFLAGS=$(CFLAGS) -nostdlib++ -fno-rtti -std=c++17
 
 ifeq ($(TARGET),debug)
 	CFLAGS+=-O0 -g
