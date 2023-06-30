@@ -1,7 +1,19 @@
 # Disable compressed instructions
 .option norvc
 
-.section rodata
+.section .rodata
+
+.global K_MEM_STACK_START
+K_MEM_STACK_START: .dword __stack_start
+
+.global K_MEM_STACK_END
+K_MEM_STACK_END: .dword __stack_end
+
+.global K_MEM_HEAP_START
+K_MEM_HEAP_START: .dword __heap_start
+
+.global K_MEM_HEAP_END
+K_MEM_HEAP_END: .dword __heap_end
 
 # message_entered_halt: .string "Entered halt!\r\n"
 

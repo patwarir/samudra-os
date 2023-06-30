@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 
+pub mod mem;
 pub mod syscon;
 pub mod uart;
 
@@ -41,6 +42,8 @@ pub extern "C" fn k_main() -> ! {
 
     unsafe {
         call_c_from_rust();
+
+        mem::print_mem_values();
 
         syscon::poweroff();
     }
