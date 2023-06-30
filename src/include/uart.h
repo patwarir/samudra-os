@@ -14,6 +14,7 @@ extern void uart_put_c_string(const string_t s);
 extern void uart_put_uint(uint_t i);
 extern void uart_put_uint_hex(uint_t i);
 extern void uart_put_sint(sint_t i);
+extern void uart_put_nl(void);
 
 #ifdef __cplusplus
 }

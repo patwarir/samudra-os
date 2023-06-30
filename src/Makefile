@@ -1,13 +1,11 @@
-# Name of the bare-metal RV64GC C compiler
+# Name of the bare-metal C compiler
 CC=riscv64-elf-gcc
 
-# Architecture: RV64GC, ABI: Hard float (lp64d)
+# Architecture and ABI
 CFLAGS=-march=rv64gc_zifencei_zicsr_zba_zbb_zbc_zbs -mabi=lp64d -mcmodel=medany
 # Static, no standard library
 CFLAGS+=-static -ffreestanding -nostartfiles -nodefaultlibs -nostdlib -nolibc -fno-exceptions
 CFLAGS+=-Wall -Wextra -Wpedantic -std=c17
-
-# CXXFLAGS=$(CFLAGS) -nostdlib++ -fno-rtti -std=c++17
 
 ifeq ($(TARGET),debug)
 	CFLAGS+=-O0 -g

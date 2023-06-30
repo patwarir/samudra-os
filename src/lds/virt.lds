@@ -1,4 +1,4 @@
-/* RV64GC Architecture */
+/* RISC-V Architecture */
 OUTPUT_ARCH( "riscv" )
 
 /* Starts at the symbol "_start" */

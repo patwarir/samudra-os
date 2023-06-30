@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# The name of the QEMU RV64GC executable
+# The name of the QEMU RISC-V executable
 QEMU="qemu-system-riscv64"
 
 # 4 Cores/HARTs

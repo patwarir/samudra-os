@@ -8,5 +8,5 @@ rustflags = [
 ]
 
 [target.riscv64gc-unknown-none-elf]
-# Name of the bare-metal RV64GC C compiler
+# Name of the bare-metal RISC-V C compiler
 linker = "riscv64-elf-gcc"

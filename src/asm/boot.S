@@ -40,6 +40,8 @@ _start_bss_zero_loop:
     la sp, __stack_end
     mv fp, sp
 
+    # TODO: Set stack pointer for other HARTs
+
     # Set machine status to machine mode
     li t0, 0b11 << 11
     csrw mstatus, t0

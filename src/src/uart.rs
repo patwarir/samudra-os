@@ -1,23 +1,23 @@
 use core::ffi::{c_char, c_uchar, CStr};
 
-pub const NEWLINE: &str = "\r\n";
+const NEWLINE: &str = "\r\n";
 
-pub const UART_ADDRESS: usize = 0x1000_0000;
+const UART_ADDRESS: *mut c_uchar = 0x1000_0000 as *mut c_uchar;
 
 pub fn uart_init() {
-    let ptr = UART_ADDRESS as *mut c_uchar;
     unsafe {
-        ptr.add(3).write_volatile((1 << 1) | (1 << 0));
-        ptr.add(2).write_volatile(1 << 0);
-        ptr.add(1).write_volatile(1 << 0);
+        UART_ADDRESS.add(3).write_volatile((1 << 1) | (1 << 0));
+        UART_ADDRESS.add(2).write_volatile(1 << 0);
+        UART_ADDRESS.add(1).write_volatile(1 << 0);
     }
 }
 
 #[no_mangle]
 pub extern "C" fn uart_put_c_uchar(c: c_uchar) {
-    let ptr = UART_ADDRESS as *mut c_uchar;
+    const UART_LSR_EMPTY_MASK: u8 = 0x40;
     unsafe {
-        ptr.write_volatile(c);
+        while UART_ADDRESS.add(5).read_volatile() & UART_LSR_EMPTY_MASK == 0 {}
+        UART_ADDRESS.write_volatile(c);
     }
 }
 
@@ -63,8 +63,11 @@ pub extern "C" fn uart_put_sint(mut i: isize) {
         uart_put_c_uchar(b'-');
         i = -i;
     }
-    if (i / 10) != 0 {
-        uart_put_sint(i / 10);
-    }
-    uart_put_c_uchar((i % 10) as u8 + b'0');
+    // Safety: Guaranteed to be non-negative
+    uart_put_uint(i.try_into().unwrap());
+}
+
+#[no_mangle]
+pub extern "C" fn uart_put_nl() {
+    uart_put_str(NEWLINE);
 }

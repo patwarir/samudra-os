@@ -11,6 +11,11 @@ extern "C" {
 
 extern void __attribute__((noreturn)) halt(void);
 
+/* Extern Rust functions */
+
+extern void __attribute__((noreturn)) poweroff(void);
+extern void __attribute__((noreturn)) reboot(void);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus
