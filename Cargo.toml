@@ -19,4 +19,4 @@ opt-level = 3
 
 [dependencies]
 libm = { version = "0.2.7", default-features = false }
-wasmi = { version = "0.30.0", default-features = false }
+wasmi = { version = "0.31.0", default-features = false }

@@ -7,7 +7,7 @@ ENTRY( _start )
 
 /* Allocatable (a), Writable (w) and Executable (x) */
 MEMORY {
-    ram (awx) : ORIGIN = 0x80000000, LENGTH = 1024M
+    ram (awx) : ORIGIN = 0x80000000, LENGTH = 8192M
 }
 
 /* Program Headers */
