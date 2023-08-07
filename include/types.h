@@ -9,13 +9,14 @@
 extern "C" {
 #endif // __cplusplus
 
-typedef uintptr_t uint_t;
-typedef intptr_t sint_t;
+typedef unsigned char char_t;
 
-typedef unsigned char uchar_t;
-typedef uchar_t * string_t;
+typedef const char_t * strc_t;
+typedef char_t * strm_t;
 
-typedef uintptr_t ptr_t;
+typedef _Float16 f16_t;
+typedef float f32_t;
+typedef double f64_t;
 
 #define null_ptr NULL
 #define null_char '\0'

@@ -1,37 +1,15 @@
 # Disable compressed instructions
 .option norvc
 
-.section .rodata
-
-.global K_MEM_STACK_START
-K_MEM_STACK_START: .dword __stack_start
-
-.global K_MEM_STACK_END
-K_MEM_STACK_END: .dword __stack_end
-
-.global K_MEM_HEAP_START
-K_MEM_HEAP_START: .dword __heap_start
-
-.global K_MEM_HEAP_END
-K_MEM_HEAP_END: .dword __heap_end
-
-# message_entered_halt: .string "Entered halt!\r\n"
-
-.section .data
-
-# Allocatable and executable
-.section .text.init, "ax"
+.section .text.init
 
 # Exported functions
 
 .global _start
+.type _start, @function
 _start:
-    # Halt if not on HART #0
-    csrr t0, mhartid
-    bnez t0, halt
-
-    # Make sure SATP is zero
-    csrw satp, zero
+    .cfi_startproc
+    .cfi_undefined ra
 
     # Set global pointer
     # Prevent linker from assuming it's already set
@@ -40,11 +18,18 @@ _start:
     la gp, __global_pointer$
 .option pop
 
+    # Make sure SATP is zero
+    csrw satp, zero
+
+    # Halt if not on HART #0
+    csrr t0, mhartid
+    bnez t0, halt
+
     # Zero all bytes in the BSS section
     la t0, __bss_start
     la t1, __bss_end
 _start_bss_zero_loop:
-    sd zero, 0(t0)
+    sd zero, (t0)
     addi t0, t0, 8
     blt t0, t1, _start_bss_zero_loop
 
@@ -54,8 +39,8 @@ _start_bss_zero_loop:
 
     # TODO: Set stack pointer for other HARTs
 
-    # Set machine status to machine mode
-    li t0, 0b11 << 11
+    # Set machine status to machine mode and setup FPU + vector
+    li t0, 0b11 << 11 | 0b1 << 13 | 0b1 << 9
     csrw mstatus, t0
 
     # Set execution begin to the "k_main" function
@@ -66,10 +51,6 @@ _start_bss_zero_loop:
     la t0, k_trap_vector
     csrw mtvec, t0
 
-    # Disable interrupts
-    # li t0, zero
-    # csrw mie, t0 # TODO: Check this
-
     # Set return from "k_main" to be halt
     # Should never happen
     la ra, halt
@@ -77,17 +58,17 @@ _start_bss_zero_loop:
     # Call "k_main"
     mret
 
+    .cfi_endproc
+
 # Infinitely halts
 .global halt
+.type halt, @function
 halt:
-    # TODO: Make sure to push a0 and lr
-    # la a0, message_entered_halt
-    # la t0, uart_put_c_string
-    # jalr t0
-
-    # Disable interrupts
-    # li t0, zero
-    # csrw mie, t0 # TODO: Check this
+    .cfi_startproc
 
     wfi
     j halt
+
+    .cfi_endproc
+
+.end

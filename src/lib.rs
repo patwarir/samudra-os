@@ -1,19 +1,17 @@
 #![no_std]
 #![no_main]
 
+pub mod asm;
+pub mod math;
+
+extern crate alloc;
+extern crate libm;
+extern crate wasmi;
+
 pub mod mem;
 pub mod syscon;
 pub mod uart;
-
-extern "C" {
-    /* Extern Assembly functions */
-
-    pub fn halt() -> !;
-
-    /* Extern C functions */
-
-    pub fn call_c_from_rust();
-}
+pub mod wasm;
 
 #[panic_handler]
 pub fn panic_handler(info: &core::panic::PanicInfo) -> ! {
@@ -23,28 +21,17 @@ pub fn panic_handler(info: &core::panic::PanicInfo) -> ! {
     if let Some(location) = info.location() {
         uart::uart_put_str("Panicked at: ");
         uart::uart_put_str(location.file());
-        uart::uart_put_c_uchar(b':');
+        uart::uart_put_str(":");
         uart::uart_put_uint(location.line() as usize);
         uart::uart_put_nl();
     }
 
-    unsafe {
-        halt();
-    }
+    syscon::poweroff();
 }
 
 #[no_mangle]
 pub extern "C" fn k_main() -> ! {
-    uart::uart_init();
+    mem::page::print_mem_values();
 
-    uart::uart_put_str("Hello, World from Rust!");
-    uart::uart_put_nl();
-
-    unsafe {
-        call_c_from_rust();
-
-        mem::print_mem_values();
-
-        syscon::poweroff();
-    }
+    syscon::poweroff();
 }

@@ -6,17 +6,17 @@ A prototype RISC-V operating system written in Rust.
 
 Supports:
 
-* RISC-V (`riscv64imafdc_zifencei_zicsr_zba_zbb_zbc_zbs`)
+* RISC-V (ISA: `riscv64gcv_zba_zbb_zbc_zbs_zfh`, ABI: `lp64d`)
 
 ## Dependencies
 
-* QEMU (`qemu-system-riscv64`)
-* Rust bare-metal toolchain (`riscv64gc-unknown-none-elf`)
-* C bare-metal toolchain (`riscv64-elf-gcc`)
+* QEMU
+* Rust bare-metal toolchain
+* C bare-metal toolchain
 
 ## Quickstart
 
-Run `./dev.sh`
+Run `./scripts/dev.sh`
 
 ## References
 

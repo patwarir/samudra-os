@@ -1,0 +1,8 @@
+[build]
+target = "riscv64gc-unknown-none-elf"
+rustflags = [
+    # Linker script
+    "-Clink-arg=-Tlds/virt.lds",
+    # Target features
+    "-Ctarget-feature=+v,+zba,+zbb,+zbc,+zbs,+zfh",
+]
