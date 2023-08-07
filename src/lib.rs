@@ -39,7 +39,7 @@ fn wasm_test() {
     });
 
     module.define("host_hello", |value: i32| {
-        uart::uart_put_str("Hello, Wasm! We got: ");
+        uart::uart_put_str("Hello, Wasm World! We got: ");
         uart::uart_put_sint(value.try_into().unwrap());
         uart::uart_put_nl();
     });
