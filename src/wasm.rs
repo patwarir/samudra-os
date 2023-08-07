@@ -8,7 +8,7 @@ pub struct KernelWasmModule<HostState> {
 
 impl<HostState> KernelWasmModule<HostState> {
     /* private */
-    const KERNEL_MODULE_NAME: &str = "samudra-kernel";
+    const KERNEL_MODULE_NAME: &str = "env";
 
     /* private */
     fn get_default_config() -> Config {
@@ -39,8 +39,8 @@ impl<HostState> KernelWasmModule<HostState> {
         let instance_pre = self.linker.instantiate(&mut self.store, &self.module).unwrap();
         let instance = instance_pre.ensure_no_start(&mut self.store).unwrap();
 
-        let main = instance.get_typed_func::<Params, Results>(&mut self.store, name).unwrap();
+        let func = instance.get_typed_func::<Params, Results>(&mut self.store, name).unwrap();
 
-        main.call(&mut self.store, params).unwrap()
+        func.call(&mut self.store, params).unwrap()
     }
 }

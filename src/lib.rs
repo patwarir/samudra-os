@@ -29,10 +29,34 @@ pub fn panic_handler(info: &core::panic::PanicInfo) -> ! {
     syscon::poweroff();
 }
 
+fn wasm_test() {
+    let wasm = include_bytes!("../wasm/example-hello-world/target/wasm32-unknown-unknown/release/example_hello_world.wasm");
+
+    let mut module = wasm::KernelWasmModule::new((), &wasm[..]);
+
+    module.define("get_version", || {
+        return 20230807_1;
+    });
+
+    module.define("host_hello", |value: i32| {
+        uart::uart_put_str("Hello, Wasm! We got: ");
+        uart::uart_put_sint(value.try_into().unwrap());
+        uart::uart_put_nl();
+    });
+
+    let ret: u32 = module.run("module_init", (0u32, 0u32));
+
+    uart::uart_put_str("Returns: ");
+    uart::uart_put_uint(ret.try_into().unwrap());
+    uart::uart_put_nl();
+}
+
 #[no_mangle]
 pub extern "C" fn k_main() -> ! {
     mem::page::init();
     mem::page::print_mem_values();
+
+    wasm_test();
 
     syscon::poweroff();
 }
