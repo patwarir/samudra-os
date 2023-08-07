@@ -1,22 +1,25 @@
 # Samudra OS
 
-A prototype RISC-V operating system written in Rust.
+A prototype RISC-V operating system written in Rust that supports kernel Wasm modules.
 
 ## Specifications
 
 Supports:
 
 * RISC-V (ISA: `riscv64gcv_zba_zbb_zbc_zbs_zfh`, ABI: `lp64d`)
+* Wasm (ISA: `wasm32_bulk-memory_multivalue_mutable-globals_nontrapping-fptoint_reference-types_sign-ext`)
 
 ## Dependencies
 
 * QEMU
+* Spike
 * Rust bare-metal toolchain
 * C bare-metal toolchain
+* Wasm toolchain
 
 ## Quickstart
 
-Run `./scripts/dev.sh`
+Run `SYSROOT={{your C bare-metal toolchain sysroot}} ./scripts/dev.sh`
 
 ## References
 
