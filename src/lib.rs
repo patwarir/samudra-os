@@ -31,6 +31,7 @@ pub fn panic_handler(info: &core::panic::PanicInfo) -> ! {
 
 #[no_mangle]
 pub extern "C" fn k_main() -> ! {
+    mem::page::init();
     mem::page::print_mem_values();
 
     syscon::poweroff();
