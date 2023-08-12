@@ -1,6 +1,8 @@
-CC=$(SYSROOT)/bin/riscv32-unknown-elf-gcc
+ifneq ($(SYSROOT),)
+	CC=$(SYSROOT)/bin/riscv32-unknown-elf-gcc
+	CFLAGS+=--sysroot=$(SYSROOT)
+endif
 
-CFLAGS=--sysroot=$(SYSROOT)
 CFLAGS+=-march=rv64gcv_zba_zbb_zbc_zbs_zfh -mabi=lp64d -mcmodel=medany
 CFLAGS+=-static -ffreestanding -nostartfiles -nodefaultlibs -nostdlib -nolibc
 CFLAGS+=-fno-common -fno-exceptions
@@ -28,6 +30,15 @@ OS_LIBS=-L$(SOURCES_RUST)
 CFLAGS_LIBS=-lsamudra_kernel
 
 OUT=./out/samudra-os.elf
+TMP=./tmp
+
+ifeq ($(OBJDUMP_FLAGS),)
+	OBJDUMP_FLAGS=-dC
+endif
+
+ifeq ($(READELF_FLAGS),)
+	READELF_FLAGS=-a
+endif
 
 .PHONY: all
 all:
@@ -44,9 +55,17 @@ clean:
 	-rm $(OUT) 2> /dev/null
 
 objdump:
-	mkdir -p ./tmp
-	$(SYSROOT)/bin/riscv32-unknown-elf-objdump -dC $(OUT) > ./tmp/objdump.txt
+	mkdir -p $(TMP)
+ifneq ($(SYSROOT),)
+	$(SYSROOT)/bin/riscv32-unknown-elf-objdump $(OBJDUMP_FLAGS) $(OUT) > $(TMP)/objdump.txt
+else
+	riscv64-elf-objdump $(OBJDUMP_FLAGS) $(OUT) > $(TMP)/objdump.txt
+endif
 
 readelf:
-	mkdir -p ./tmp
-	$(SYSROOT)/bin/riscv32-unknown-elf-readelf -a $(OUT) > ./tmp/readelf.txt
+	mkdir -p $(TMP)
+ifneq ($(SYSROOT),)
+	$(SYSROOT)/bin/riscv32-unknown-elf-readelf $(READELF_FLAGS) $(OUT) > $(TMP)/readelf.txt
+else
+	riscv64-elf-readelf $(READELF_FLAGS) $(OUT) > $(TMP)/readelf.txt
+endif

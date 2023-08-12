@@ -12,7 +12,17 @@ impl<HostState> KernelWasmModule<HostState> {
 
     /* private */
     fn get_default_config() -> Config {
-        Config::default()
+        let mut config = Config::default();
+        config.floats(true);
+        config.wasm_bulk_memory(true);
+        config.wasm_extended_const(false);
+        config.wasm_multi_value(true);
+        config.wasm_mutable_global(true);
+        config.wasm_reference_types(true);
+        config.wasm_saturating_float_to_int(true);
+        config.wasm_sign_extension(true);
+        config.wasm_tail_call(true);
+        config
     }
 
     pub fn new(initial_state: HostState, stream: impl Read) -> Self {

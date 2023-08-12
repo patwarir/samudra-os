@@ -8,9 +8,6 @@
 .global _start
 .type _start, @function
 _start:
-    .cfi_startproc
-    .cfi_undefined ra
-
     # Set global pointer
     # Prevent linker from assuming it's already set
 .option push
@@ -58,17 +55,11 @@ _start_bss_zero_loop:
     # Call "k_main"
     mret
 
-    .cfi_endproc
+.section .text
 
 # Infinitely halts
 .global halt
 .type halt, @function
 halt:
-    .cfi_startproc
-
     wfi
     j halt
-
-    .cfi_endproc
-
-.end

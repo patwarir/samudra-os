@@ -32,7 +32,7 @@ pub fn panic_handler(info: &core::panic::PanicInfo) -> ! {
 fn wasm_test() {
     let wasm = include_bytes!("../wasm/example-hello-world/target/wasm32-unknown-unknown/release/example_hello_world.wasm");
 
-    let mut module = wasm::KernelWasmModule::new((), &wasm[..]);
+    let mut module = wasm::KernelWasmModule::new(0u32, &wasm[..]);
 
     module.define("get_version", || {
         return 20230807_1;
@@ -41,6 +41,16 @@ fn wasm_test() {
     module.define("host_hello", |value: i32| {
         uart::uart_put_str("Hello, Wasm World! We got: ");
         uart::uart_put_sint(value.try_into().unwrap());
+        uart::uart_put_nl();
+    });
+
+    module.define("mut_counter", |mut caller: wasmi::Caller<u32>| {
+        let data = caller.data_mut();
+        uart::uart_put_str("Counter current value: ");
+        uart::uart_put_uint((*data).try_into().unwrap());
+        uart::uart_put_nl();
+        *data += 1;
+        uart::uart_put_str("Counter now incremented");
         uart::uart_put_nl();
     });
 
