@@ -4,6 +4,7 @@ use std::ffi::c_uchar;
 
 const VERSION: u32 = 20230807_1;
 
+#[link(wasm_import_module = "samudra-os")]
 extern "C" {
     pub fn get_version() -> u32;
     pub fn host_hello(value: i32);

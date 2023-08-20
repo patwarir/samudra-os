@@ -8,7 +8,7 @@ pub struct KernelWasmModule<HostState> {
 
 impl<HostState> KernelWasmModule<HostState> {
     /* private */
-    const KERNEL_MODULE_NAME: &str = "env";
+    const KERNEL_MODULE_NAME: &str = "samudra-os";
 
     /* private */
     fn get_default_config() -> Config {

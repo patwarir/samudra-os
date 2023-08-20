@@ -1,5 +1,4 @@
 ifneq ($(SYSROOT),)
-	CC=$(SYSROOT)/bin/riscv32-unknown-elf-gcc
 	CFLAGS+=--sysroot=$(SYSROOT)
 endif
 
@@ -29,8 +28,15 @@ endif
 OS_LIBS=-L$(SOURCES_RUST)
 CFLAGS_LIBS=-lsamudra_kernel
 
-OUT=./out/samudra-os.elf
-TMP=./tmp
+ifeq ($(OUT_DIR),)
+	OUT_DIR=./out
+endif
+
+ifeq ($(TMP_DIR),)
+	TMP_DIR=./tmp
+endif
+
+OUT_FILE=$(OUT_DIR)/samudra-os.elf
 
 ifeq ($(OBJDUMP_FLAGS),)
 	OBJDUMP_FLAGS=-dC
@@ -40,32 +46,36 @@ ifeq ($(READELF_FLAGS),)
 	READELF_FLAGS=-a
 endif
 
+ifeq ($(WASMDUMP_FLAGS),)
+	WASMDUMP_FLAGS=print -p
+endif
+
 .PHONY: all
 all:
-	mkdir -p ./out
+	mkdir -p $(OUT_DIR)
 ifeq ($(TARGET),debug)
 	cargo build
 else
 	cargo build --release
 endif
-	$(CC) $(CFLAGS) $(CFLAGS_LINKER_SCRIPT) $(CFLAGS_INCLUDE_PATH) -o $(OUT) $(SOURCES_ASM) $(OS_LIBS) $(CFLAGS_LIBS) $(SOURCES_C)
+	$(CC) $(CFLAGS) $(CFLAGS_LINKER_SCRIPT) $(CFLAGS_INCLUDE_PATH) -o $(OUT_FILE) $(SOURCES_ASM) $(OS_LIBS) $(CFLAGS_LIBS) $(SOURCES_C)
 
+.PHONY: clean
 clean:
 	-cargo clean
-	-rm $(OUT) 2> /dev/null
+	-rm -r $(OUT_DIR) 2> /dev/null
 
+.PHONY: objdump
 objdump:
-	mkdir -p $(TMP)
-ifneq ($(SYSROOT),)
-	$(SYSROOT)/bin/riscv32-unknown-elf-objdump $(OBJDUMP_FLAGS) $(OUT) > $(TMP)/objdump.txt
-else
-	riscv64-elf-objdump $(OBJDUMP_FLAGS) $(OUT) > $(TMP)/objdump.txt
-endif
+	mkdir -p $(TMP_DIR)
+	$(OBJDUMP) $(OBJDUMP_FLAGS) $(TARGET_FILE) > $(TMP_DIR)/objdump.txt
 
+.PHONY: readelf
 readelf:
-	mkdir -p $(TMP)
-ifneq ($(SYSROOT),)
-	$(SYSROOT)/bin/riscv32-unknown-elf-readelf $(READELF_FLAGS) $(OUT) > $(TMP)/readelf.txt
-else
-	riscv64-elf-readelf $(READELF_FLAGS) $(OUT) > $(TMP)/readelf.txt
-endif
+	mkdir -p $(TMP_DIR)
+	$(READELF) $(READELF_FLAGS) $(TARGET_FILE) > $(TMP_DIR)/readelf.txt
+
+.PHONY: wasmdump
+wasmdump:
+	mkdir -p $(TMP_DIR)
+	$(WASMDUMP) $(WASMDUMP_FLAGS) $(TARGET_FILE) > $(TMP_DIR)/wasmdump.txt

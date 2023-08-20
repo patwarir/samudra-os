@@ -6,7 +6,7 @@ A prototype RISC-V operating system written in Rust that supports kernel Wasm mo
 
 Supports:
 
-* RISC-V (ISA: `riscv64gcv_zba_zbb_zbc_zbs_zfh` - with planned `zcb_zfa_zvbb_zvbc_zvfh`, ABI: `lp64d`)
+* RISC-V (ISA: `riscv64gcv_zba_zbb_zbc_zbs_zfh` - with planned `zcb_zfa_zicond_zvbb_zvbc_zvfh`, ABI: `lp64d`)
 * Wasm (ISA: `wasm32_bulk-memory_multivalue_mutable-globals_nontrapping-fptoint_reference-types_sign-ext_tail-call`)
 
 ## Dependencies
@@ -25,7 +25,7 @@ Optional:
 
 ## Quickstart
 
-Run `./scripts/dev.sh`
+Run `CC={{ bare-metal C compiler }} ./scripts/dev.sh`
 
 ## References
 
