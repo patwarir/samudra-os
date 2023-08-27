@@ -6,5 +6,5 @@ rustflags = [
     # Linker script
     "-Clink-arg=-Tlds/virt.lds",
     # Target features
-    "-Ctarget-feature=+v,+zba,+zbb,+zbc,+zbs,+zfh",
+    "-Ctarget-feature=+v,+h,+zba,+zbb,+zbc,+zbs,+zfh",
 ]

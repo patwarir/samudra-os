@@ -2,7 +2,7 @@ ifneq ($(SYSROOT),)
 	CFLAGS+=--sysroot=$(SYSROOT)
 endif
 
-CFLAGS+=-march=rv64gcv_zba_zbb_zbc_zbs_zfh -mabi=lp64d -mcmodel=medany
+CFLAGS+=-march=rv64gcvh_zba_zbb_zbc_zbs_zfh -mabi=lp64d -mcmodel=medany
 CFLAGS+=-static -ffreestanding -nostartfiles -nodefaultlibs -nostdlib -nolibc
 CFLAGS+=-fno-common -fno-exceptions
 CFLAGS+=-Wall -Wextra -std=gnu17
