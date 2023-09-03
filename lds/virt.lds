@@ -25,7 +25,7 @@ SECTIONS {
     /* CPU Instructions, begin with .text.init */
     .text : ALIGN(4K) {
         PROVIDE(__text_start = .);
-        *(.text.init);
+        KEEP(*(.text.init));
         *(.text .text.*);
         PROVIDE(__text_end = .);
     } >ram AT>ram :text
@@ -54,8 +54,17 @@ SECTIONS {
         PROVIDE(__bss_start = .);
         *(.sbss .sbss.*);
         *(.bss .bss.*);
+        *(COMMON);
         PROVIDE(__bss_end = .);
     } >ram AT>ram :bss
+
+    /* Thread-local storage */
+    .tls : {
+        *(.tdata .tdata.*);
+        *(.tbss .tbss.*);
+    }
+
+    ASSERT((SIZEOF(.tls) == 0), "ERROR: Cannot have thread-local storage")
 
     /* Exported labels */
 
@@ -70,4 +79,12 @@ SECTIONS {
     PROVIDE(__heap_start = __stack_end);
     PROVIDE(__heap_end = __memory_end);
     PROVIDE(__heap_size = __heap_end - __heap_start);
+
+    /* Discards */
+
+    /DISCARD/ : {
+        *(.eh_frame);
+        *(.comment .comment.*);
+        *(.note .note.*);
+    }
 }

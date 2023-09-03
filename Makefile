@@ -50,6 +50,10 @@ ifeq ($(WASMDUMP_FLAGS),)
 	WASMDUMP_FLAGS=print -p
 endif
 
+ifeq ($(TARGET_FILE),)
+	TARGET_FILE=$(OUT_FILE)
+endif
+
 .PHONY: all
 all:
 	mkdir -p $(OUT_DIR)
