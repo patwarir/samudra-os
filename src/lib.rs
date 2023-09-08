@@ -32,6 +32,10 @@ pub fn panic_handler(info: &core::panic::PanicInfo) -> ! {
 fn wasm_test() {
     let wasm = include_bytes!("../wasm/example-hello-world/target/wasm32-unknown-unknown/release/example_hello_world.wasm");
 
+    uart::uart_put_str("WASM File Length: ");
+    uart::uart_put_uint(wasm.len());
+    uart::uart_put_nl();
+
     let mut module = wasm::KernelWasmModule::new(0u32, &wasm[..]);
 
     module.define("get_version", || {
