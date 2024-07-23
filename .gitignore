@@ -5,10 +5,8 @@
 *.key
 
 # Environment
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+*.env.local
+*.env.*.local
 
 # Visual Studio Code
 .vscode/
@@ -18,9 +16,6 @@
 
 # JetBrains
 .idea/
-
-# Docker
-.dockerignore
 
 # Python
 __pycache__/
@@ -38,12 +33,18 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Terraform
+.terraform/
+
 # ESLint
 .eslintcache
 
 # NextJS
 .next/
 .swc/
+
+# Expo
+.expo/
 
 # Coverage
 [Cc]overage/
@@ -68,6 +69,7 @@ yarn-error.log*
 [Oo]bject/
 [Oo]ut/
 [Pp]kg/
+[Ww]eb-[Bb]uild/
 
 # Cache
 [Cc]ache/

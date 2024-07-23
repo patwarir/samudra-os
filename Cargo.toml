@@ -1,14 +1,16 @@
 [package]
 name = "samudra-kernel"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
-[lib]
-crate-type = ["staticlib"]
+[[bin]]
+name = "samudra-kernel"
 test = false
 bench = false
 
 [profile.dev]
+overflow-checks = true
+debug = "full"
 lto = "off"
 opt-level = 0
 
@@ -18,5 +20,3 @@ lto = "fat"
 opt-level = 3
 
 [dependencies]
-libm = { version = "0.2.7", default-features = false }
-wasmi = { version = "0.31.0", default-features = false }
