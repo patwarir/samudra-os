@@ -3,7 +3,7 @@ use crate::uart;
 const SYSTEM_CONTROL_ADDRESS: *mut u32 = 0x100000 as *mut u32;
 
 #[no_mangle]
-pub extern "C" fn poweroff() -> ! {
+pub extern "C" fn k_poweroff() -> ! {
     uart::uart_put_str("Powering off...");
     uart::uart_put_nl();
 

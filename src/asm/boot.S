@@ -28,8 +28,11 @@ _start:
     mv sp, t0
     mv fp, sp
 
-    # Set machine status to machine mode and setup FPU + vector
-    li t0, 0b11 << 11 | 0b1 << 13 | 0b1 << 9
+    # Disable thread-local storage
+    mv tp, zero
+
+    # Set machine status to machine mode
+    li t0, 0b11 << 11
     csrw mstatus, t0
 
     # Set execution to the "k_main" function

@@ -7,20 +7,8 @@ core::arch::global_asm!(core::include_str!("./asm/trap.S"));
 #[no_mangle]
 pub static STACK_SIZE_PER_HART: usize = 256 * 1024;
 
-extern "C" {
-    #[link_name = "__memory_start"]
-    pub static mut MEMORY_START: core::ffi::c_void;
-}
-
-#[no_mangle]
-pub extern "C" fn k_halt() -> ! {
-    loop {
-        unsafe {
-            core::arch::asm!("wfi", options(nomem, nostack));
-        }
-    }
-}
-
+pub mod memory;
+pub mod riscv;
 pub mod system_control;
 pub mod uart;
 
@@ -36,16 +24,14 @@ pub fn panic_handler(info: &core::panic::PanicInfo) -> ! {
     }
     uart::uart_put_nl();
 
-    system_control::poweroff();
+    system_control::k_poweroff();
 }
 
 #[no_mangle]
-pub extern "C" fn get_hart_id() -> usize {
-    let hart_id: usize;
-    unsafe {
-        core::arch::asm!("csrr {}, mhartid", out(reg) hart_id, options(nomem, nostack));
+pub extern "C" fn k_halt() -> ! {
+    loop {
+        riscv::wfi();
     }
-    hart_id
 }
 
 #[no_mangle]
@@ -57,11 +43,15 @@ pub extern "C" fn k_main() -> ! {
         static mut BSS_END: core::ffi::c_void;
     }
 
-    if get_hart_id() != 0 {
+    if riscv::hart_id() != 0 {
         k_halt();
     }
 
+    // TODO: Zero BSS
+
+    // TODO: Setup FPU + vector
+
     uart::uart_init();
 
-    system_control::poweroff();
+    system_control::k_poweroff();
 }

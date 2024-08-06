@@ -4,7 +4,7 @@ target = "riscv64gc-unknown-none-elf"
 [target.riscv64gc-unknown-none-elf]
 rustflags = [
     # Linker Script
-    "-Clink-arg=-Tsrc/lds/virt.lds",
+    "-Clink-arg=--script=./src/lds/virt.lds",
     # Target Features
     "-Ctarget-feature=+v,+zba,+zbb,+zbs",
 ]

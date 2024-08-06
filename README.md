@@ -13,7 +13,7 @@ Supports:
 
 Required:
 
-* Rust bare-metal toolchain
+* Rust bare-metal RISC-V toolchain
 * Rust Wasm toolchain
 * QEMU
 
