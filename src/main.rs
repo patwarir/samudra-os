@@ -34,8 +34,7 @@ pub extern "C" fn k_halt() -> ! {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn k_main() -> ! {
+fn zero_bss() {
     extern "C" {
         #[link_name = "__bss_start"]
         static mut BSS_START: core::ffi::c_void;
@@ -43,11 +42,28 @@ pub extern "C" fn k_main() -> ! {
         static mut BSS_END: core::ffi::c_void;
     }
 
+    unsafe {
+        let bss_start = core::ptr::addr_of_mut!(BSS_START).cast::<u8>();
+        let bss_end = core::ptr::addr_of_mut!(BSS_END).cast::<u8>();
+
+        assert!(bss_end >= bss_start);
+
+        let mut ptr = bss_start;
+        while ptr <= bss_end {
+            ptr.write_volatile(0);
+            ptr = ptr.add(1);
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn k_main() -> ! {
     if riscv::hart_id() != 0 {
+        // Halt if not init hart
         k_halt();
     }
 
-    // TODO: Zero BSS
+    zero_bss();
 
     // TODO: Setup FPU + vector
 
