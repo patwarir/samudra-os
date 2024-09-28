@@ -1,11 +1,10 @@
-use crate::uart;
+use crate::println;
 
 const SYSTEM_CONTROL_ADDRESS: *mut u32 = 0x100000 as *mut u32;
 
 #[no_mangle]
 pub extern "C" fn k_poweroff() -> ! {
-    uart::uart_put_str("Powering off...");
-    uart::uart_put_nl();
+    println!("Powering off...");
 
     const SYSTEM_CONTROL_POWER_SIGNAL: u32 = 0x5555;
     unsafe {

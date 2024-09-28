@@ -19,15 +19,15 @@ Required:
 
 ## Quickstart
 
-Run `cargo build --release && ./scripts/qemu.sh ./target/riscv64gc-unknown-none-elf/release/samudra-kernel`
+Run `cargo build --release && ./scripts/qemu.sh`
 
 ## References
 
 Thanks to:
 
 * [The Adventures of OS: Making a RISC-V Operating System using Rust](https://osblog.stephenmarz.com/index.html)
-* [maRVelOS](https://github.com/DonaldKellett/marvelos)
 * [octox](https://github.com/o8vm/octox)
+* [maRVelOS](https://github.com/DonaldKellett/marvelos)
 * [RISC-V from scratch 1: Introduction, toolchain setup, and hello world!](https://twilco.github.io/riscv-from-scratch/2019/03/10/riscv-from-scratch-1.html)
 * [RISC-v Bytes](https://danielmangum.com/categories/risc-v-bytes/)
 * [Serial Programming/8250 UART Programming](https://en.wikibooks.org/wiki/Serial_Programming/8250_UART_Programming)

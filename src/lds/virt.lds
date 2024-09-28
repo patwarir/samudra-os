@@ -23,16 +23,18 @@ PHDRS {
 */
 SECTIONS {
     /* CPU instructions */
-    .text : ALIGN(4K) {
+    .text : ALIGN(0x1000) {
         /* Initialization */
         KEEP(*(.text.init .text.init.*));
         *(.text .text.*);
+
+        . = ALIGN(8);
 
         PROVIDE(etext = .);
     } >ram AT>ram :text
 
     /* Global (readonly) constants and initialized variables */
-    .data : ALIGN(4K) {
+    .data : ALIGN(0x1000) {
         /* Pointer to make data access faster for small (ro)data */
         __global_pointer$ = . + 0x800;
 
@@ -44,11 +46,13 @@ SECTIONS {
     } >ram AT>ram :data
 
     /* Global uninitialized variables */
-    .bss : ALIGN(4K) {
+    .bss : ALIGN(0x1000) {
         __bss_start = .;
 
         *(.sbss .sbss.*);
         *(.bss .bss.*);
+
+        . = ALIGN(8);
 
         __bss_end = .;
     } >ram AT>ram :bss
@@ -61,7 +65,7 @@ SECTIONS {
 
     ASSERT((SIZEOF(.tls) == 0), "ERROR: Cannot have thread-local storage")
 
-    . = ALIGN(4K);
+    . = ALIGN(0x1000);
 
     /* Exports & Discards */
 
