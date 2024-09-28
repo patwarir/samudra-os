@@ -17,6 +17,9 @@ _start:
     # Disable paging
     csrw satp, zero
 
+    # Store the Device Tree
+    csrw mscratch, a1
+
     # Set stack pointer for each HART
     csrr t0, mhartid
     # Stack grows downwards
@@ -27,9 +30,6 @@ _start:
     add t0, t0, t1
     mv sp, t0
     mv fp, sp
-
-    # Disable thread-local storage
-    mv tp, zero
 
     # Set machine status to machine mode
     li t0, 0b11 << 11

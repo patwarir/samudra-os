@@ -7,22 +7,22 @@ core::arch::global_asm!(core::include_str!("./asm/trap.S"));
 #[no_mangle]
 pub static STACK_SIZE_PER_HART: usize = 256 * 1024;
 
-pub mod memory;
-pub mod riscv;
-pub mod system_control;
-pub mod uart;
+mod concurrency;
+mod memory;
+mod riscv;
+mod system_control;
+mod uart;
 
 #[panic_handler]
-pub fn panic_handler(info: &core::panic::PanicInfo) -> ! {
-    uart::uart_put_str("Panicked at: ");
+fn panic_handler(info: &core::panic::PanicInfo) -> ! {
+    print!("Hart {} panicked at: ", riscv::mhartid());
     if let Some(location) = info.location() {
-        uart::uart_put_str(location.file());
-        uart::uart_put_str(":");
-        uart::uart_put_uint(location.line().try_into().unwrap());
+        println!("{}:{}", location.file(), location.line());
     } else {
-        uart::uart_put_str("unknown location");
+        println!("unknown location");
     }
-    uart::uart_put_nl();
+
+    println!("{}", info.message());
 
     system_control::k_poweroff();
 }
@@ -56,18 +56,36 @@ fn zero_bss() {
     }
 }
 
+#[cfg(target_endian = "little")]
+fn device_tree(fdtb_ptr: usize) {
+    unsafe {
+        let ptr = (fdtb_ptr as *const u8).cast::<u32>();
+
+        let magic = ptr.add(0).read_volatile().swap_bytes();
+        assert_eq!(magic, 0xD00DFEED);
+
+        let version = ptr.add(5).read_volatile().swap_bytes();
+        assert_eq!(version, 17);
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn k_main() -> ! {
-    if riscv::hart_id() != 0 {
+    if riscv::mhartid() != 0 {
         // Halt if not init hart
         k_halt();
     }
 
+    riscv::mstatus::initialize_fs_and_vs();
+
+    // TODO: Setup MPP, MIE and TLS
+
     zero_bss();
 
-    // TODO: Setup FPU + vector
+    let fdtb_ptr = riscv::mscratch();
+    device_tree(fdtb_ptr);
 
-    uart::uart_init();
+    // TODO: Kernel
 
     system_control::k_poweroff();
 }
