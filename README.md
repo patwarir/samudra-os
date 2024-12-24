@@ -6,7 +6,7 @@ A prototype RISC-V operating system written in Rust that supports kernel Wasm mo
 
 Supports:
 
-* RISC-V (ISA: `riscv64`, ABI: `lp64d`)
+* RISC-V (ISA: `riscv64gcv_zba_zbb_zbs`, ABI: `lp64d`)
 * Wasm (ISA: `wasm32`)
 
 ## Dependencies
@@ -19,7 +19,7 @@ Required:
 
 ## Quickstart
 
-Run `cargo build --release && ./scripts/qemu.sh`
+Run `cargo build --locked --release && ./scripts/qemu.sh`
 
 ## References
 

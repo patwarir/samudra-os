@@ -24,14 +24,14 @@ _start:
     csrr t0, mhartid
     # Stack grows downwards
     addi t0, t0, 1
-    ld t1, (STACK_SIZE_PER_HART)
+    ld t1, (K_STACK_SIZE_PER_HART)
     mul t1, t1, t0
     la t0, __memory_start
     add t0, t0, t1
     mv sp, t0
     mv fp, sp
 
-    # Set machine status to machine mode
+    # Set machine status (MPP) to machine mode
     li t0, 0b11 << 11
     csrw mstatus, t0
 
@@ -43,9 +43,9 @@ _start:
     la t0, k_trap_vector
     csrw mtvec, t0
 
-    # Set return from "k_main" to "k_halt"
+    # Set return from "k_main" to "k_hart_halt"
     # Should never happen
-    la ra, k_halt
+    la ra, k_hart_halt
 
     # Call "k_main"
     mret
