@@ -12,14 +12,16 @@ impl Uart {
 
     /// Initializes a new UART connection and clears previous buffers
     unsafe fn new() -> Self {
-        // Enable and clear FIFO buffers
-        Self::UART_ADDRESS.add(2).write_volatile(0b111);
+        unsafe {
+            // Enable and clear FIFO buffers
+            Self::UART_ADDRESS.add(2).write_volatile(0b111);
 
-        // Set character length of 8 bits in LCR
-        Self::UART_ADDRESS.add(3).write_volatile(0b11);
+            // Set character length of 8 bits in LCR
+            Self::UART_ADDRESS.add(3).write_volatile(0b11);
 
-        // Enable interrupts
-        Self::UART_ADDRESS.add(1).write_volatile(1);
+            // Enable interrupts
+            Self::UART_ADDRESS.add(1).write_volatile(1);
+        }
 
         Self
     }

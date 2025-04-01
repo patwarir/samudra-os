@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub static K_STACK_SIZE_PER_HART: usize = 256 * 1024;
 
 core::arch::global_asm!(core::include_str!("./asm/boot.S"));
@@ -13,7 +13,7 @@ mod riscv;
 mod system_control;
 mod uart;
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn k_hart_halt() -> ! {
     loop {
         riscv::wfi();
@@ -26,6 +26,7 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
         uart::io_lock_acquire();
 
         uart::write_unsafe::<false>(format_args!("Hart {} panicked at: ", riscv::mhartid()));
+
         if let Some(location) = info.location() {
             uart::write_unsafe::<true>(format_args!("{}:{}", location.file(), location.line()));
         } else {
@@ -49,8 +50,8 @@ fn zero_bss() {
     }
 
     unsafe {
-        let mut ptr = core::ptr::addr_of_mut!(BSS_START) as usize;
-        let end = core::ptr::addr_of_mut!(BSS_END) as usize;
+        let mut ptr = &raw mut BSS_START as usize;
+        let end = &raw mut BSS_END as usize;
 
         assert!(ptr <= end);
 
@@ -80,7 +81,7 @@ fn device_tree(fdtb_ptr: usize) {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn k_main() -> ! {
     if riscv::mhartid() != 0 {
         // Halt if not init hart

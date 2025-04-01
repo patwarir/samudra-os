@@ -2,7 +2,7 @@ use crate::println;
 
 const SYSTEM_CONTROL_ADDRESS: *mut u32 = 0x100000 as *mut u32;
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn k_poweroff() -> ! {
     println!("Powering off...");
 
