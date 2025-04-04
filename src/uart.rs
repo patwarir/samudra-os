@@ -4,7 +4,7 @@ use core::fmt;
 
 pub const NEWLINE: &str = "\r\n";
 
-/// Safety: Assumes the IO lock is already acquired
+/// SAFETY: Assumes the IO lock is already acquired
 struct Uart;
 
 impl Uart {
@@ -26,6 +26,7 @@ impl Uart {
         Self
     }
 
+    /// Writes a single character
     fn write_c_uchar(&mut self, c: c_uchar) {
         const LSR_EMPTY_MASK: c_uchar = 0x40;
         unsafe {
@@ -47,6 +48,10 @@ impl fmt::Write for Uart {
 
 static IO_LOCK: SpinLock = SpinLock::new();
 
+pub unsafe fn io_lock_try_acquire() -> bool {
+    IO_LOCK.try_acquire()
+}
+
 pub unsafe fn io_lock_acquire() {
     IO_LOCK.acquire();
 }
@@ -55,7 +60,7 @@ pub unsafe fn io_lock_release() {
     IO_LOCK.release();
 }
 
-/// Safety: Assumes the IO lock is already acquired
+/// SAFETY: Assumes the IO lock is already acquired
 pub unsafe fn write_unsafe<const ADD_NEWLINE: bool>(args: fmt::Arguments) {
     use fmt::Write;
 
@@ -78,14 +83,7 @@ pub fn write<const ADD_NEWLINE: bool>(args: fmt::Arguments) {
 }
 
 #[macro_export]
-macro_rules! print {
-    ($($arg: tt)+) => {
-        $crate::uart::write::<false>(format_args!($($arg)*));
-    };
-}
-
-#[macro_export]
-macro_rules! println {
+macro_rules! k_println {
     () => {
         $crate::uart::write::<true>(format_args!(""));
     };

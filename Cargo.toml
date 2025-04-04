@@ -20,3 +20,4 @@ lto = "fat"
 opt-level = 3
 
 [dependencies]
+fdt = { version = "0.1.5", features = ["pretty-printing"] }

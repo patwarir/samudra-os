@@ -17,10 +17,7 @@ PHDRS {
     bss PT_LOAD;
 }
 
-/*
-    Set sections in RAM
-    Provide variables to the kernel
-*/
+/* Sections in RAM and kernel variables */
 SECTIONS {
     /* CPU instructions */
     .text : ALIGN(0x1000) {

@@ -25,6 +25,7 @@ Run `cargo build --locked --release && ./scripts/qemu.sh`
 
 Thanks to:
 
+* [k23](https://github.com/JonasKruckenberg/k23)
 * [The Adventures of OS: Making a RISC-V Operating System using Rust](https://osblog.stephenmarz.com/index.html)
 * [octox](https://github.com/o8vm/octox)
 * [maRVelOS](https://github.com/DonaldKellett/marvelos)

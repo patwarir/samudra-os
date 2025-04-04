@@ -2,7 +2,7 @@
 #![no_main]
 
 #[unsafe(no_mangle)]
-pub static K_STACK_SIZE_PER_HART: usize = 256 * 1024;
+pub static K_STACK_SIZE_PER_HART_BYTES: usize = 256 * 1024;
 
 core::arch::global_asm!(core::include_str!("./asm/boot.S"));
 core::arch::global_asm!(core::include_str!("./asm/trap.S"));
@@ -62,23 +62,33 @@ fn zero_bss() {
     }
 }
 
+/// SAFETY: Initialized by `parse_device_tree`
+mod fdtb_variables {
+    use crate::concurrency::OnceLock;
+
+    pub static NUM_HARTS: OnceLock<usize> = OnceLock::new();
+    pub static MEMORY_SIZE_BYTES: OnceLock<usize> = OnceLock::new();
+}
+
+/// Initializes device tree variables from FDTB stored in big-endian format
 #[cfg(target_endian = "little")]
-fn device_tree(fdtb_ptr: usize) {
-    unsafe {
-        assert_ne!(fdtb_ptr, 0);
+fn parse_device_tree(fdtb_ptr: usize) {
+    use fdt::Fdt;
 
-        let ptr = fdtb_ptr as *const u32;
+    let fdtb = unsafe { Fdt::from_ptr(fdtb_ptr as *const u8) }.expect("Invalid FDTB pointer!");
 
-        // The FDTB is stored in big-endian format
+    fdtb_variables::NUM_HARTS
+        .set(fdtb.cpus().count())
+        .expect("Failed to set NUM_HARTS!");
 
-        const FDTB_MAGIC: u32 = 0xD00DFEED;
-        let magic = ptr.add(0).read_volatile().swap_bytes();
-        assert_eq!(magic, FDTB_MAGIC);
-
-        const FDTB_VERSION: u32 = 17;
-        let version = ptr.add(5).read_volatile().swap_bytes();
-        assert_eq!(version, FDTB_VERSION);
-    }
+    fdtb_variables::MEMORY_SIZE_BYTES
+        .set(
+            fdtb.memory()
+                .regions()
+                .map(|region| region.size.unwrap_or(0))
+                .sum(),
+        )
+        .expect("Failed to set MEMORY_SIZE_BYTES!");
 }
 
 #[unsafe(no_mangle)]
@@ -95,7 +105,7 @@ pub extern "C" fn k_main() -> ! {
     zero_bss();
 
     let fdtb_ptr = riscv::mscratch::get();
-    device_tree(fdtb_ptr);
+    parse_device_tree(fdtb_ptr);
 
     // TODO: Kernel
 

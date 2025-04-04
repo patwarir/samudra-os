@@ -24,7 +24,7 @@ _start:
     csrr t0, mhartid
     # Stack grows downwards
     addi t0, t0, 1
-    ld t1, (K_STACK_SIZE_PER_HART)
+    ld t1, (K_STACK_SIZE_PER_HART_BYTES)
     mul t1, t1, t0
     la t0, __memory_start
     add t0, t0, t1
