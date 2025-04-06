@@ -4,19 +4,21 @@
 #[unsafe(no_mangle)]
 pub static K_STACK_SIZE_PER_HART_BYTES: usize = 256 * 1024;
 
+#[unsafe(no_mangle)]
+pub static K_TLS_SIZE_PER_HART_BYTES: usize = 4 * 1024;
+
 core::arch::global_asm!(core::include_str!("./asm/boot.S"));
 core::arch::global_asm!(core::include_str!("./asm/trap.S"));
 
 mod concurrency;
 mod memory;
-mod riscv;
 mod system_control;
 mod uart;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn k_hart_halt() -> ! {
     loop {
-        riscv::wfi();
+        riscv::asm::wfi();
     }
 }
 
@@ -25,7 +27,10 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
     unsafe {
         uart::io_lock_acquire();
 
-        uart::write_unsafe::<false>(format_args!("Hart {} panicked at: ", riscv::mhartid()));
+        uart::write_unsafe::<false>(format_args!(
+            "Hart {} panicked at: ",
+            riscv::register::mhartid::read()
+        ));
 
         if let Some(location) = info.location() {
             uart::write_unsafe::<true>(format_args!("{}:{}", location.file(), location.line()));
@@ -39,6 +44,17 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
     }
 
     system_control::k_poweroff();
+}
+
+fn setup_csrs() {
+    use riscv::register::mstatus;
+
+    unsafe {
+        mstatus::set_mpp(mstatus::MPP::Machine);
+
+        mstatus::set_fs(mstatus::FS::Initial);
+        mstatus::set_vs(mstatus::VS::Initial);
+    }
 }
 
 fn zero_bss() {
@@ -64,18 +80,16 @@ fn zero_bss() {
 
 /// SAFETY: Initialized by `parse_device_tree`
 mod fdtb_variables {
-    use crate::concurrency::OnceLock;
+    use crate::concurrency::OnceSpinLock;
 
-    pub static NUM_HARTS: OnceLock<usize> = OnceLock::new();
-    pub static MEMORY_SIZE_BYTES: OnceLock<usize> = OnceLock::new();
+    pub static NUM_HARTS: OnceSpinLock<usize> = OnceSpinLock::new();
+    pub static MEMORY_SIZE_BYTES: OnceSpinLock<usize> = OnceSpinLock::new();
 }
 
 /// Initializes device tree variables from FDTB stored in big-endian format
 #[cfg(target_endian = "little")]
 fn parse_device_tree(fdtb_ptr: usize) {
-    use fdt::Fdt;
-
-    let fdtb = unsafe { Fdt::from_ptr(fdtb_ptr as *const u8) }.expect("Invalid FDTB pointer!");
+    let fdtb = unsafe { fdt::Fdt::from_ptr(fdtb_ptr as *const u8) }.expect("Invalid FDTB pointer!");
 
     fdtb_variables::NUM_HARTS
         .set(fdtb.cpus().count())
@@ -93,19 +107,18 @@ fn parse_device_tree(fdtb_ptr: usize) {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn k_main() -> ! {
-    if riscv::mhartid() != 0 {
+    use riscv::register::{mhartid, mscratch};
+
+    if mhartid::read() != 0 {
         // Halt if not init hart
         k_hart_halt();
     }
 
-    riscv::mstatus::initialize_fs_and_vs();
-
-    // TODO: Setup MPP, MIE and TLS
-
+    setup_csrs();
     zero_bss();
+    parse_device_tree(mscratch::read());
 
-    let fdtb_ptr = riscv::mscratch::get();
-    parse_device_tree(fdtb_ptr);
+    // TODO: Setup TLS + MIE (interrupts)
 
     // TODO: Kernel
 

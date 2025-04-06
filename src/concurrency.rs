@@ -24,13 +24,13 @@ impl SpinLock {
     }
 }
 
-pub struct OnceLock<T> {
+pub struct OnceSpinLock<T> {
     lock: SpinLock,
     initialized: AtomicBool,
     value: UnsafeCell<T>,
 }
 
-impl<T> OnceLock<T> {
+impl<T> OnceSpinLock<T> {
     pub const fn new() -> Self {
         Self {
             lock: SpinLock::new(),
@@ -64,5 +64,5 @@ impl<T> OnceLock<T> {
 }
 
 /// SAFETY: Manages its own synchronization and is safe to share across threads
-unsafe impl<T> Send for OnceLock<T> {}
-unsafe impl<T> Sync for OnceLock<T> {}
+unsafe impl<T> Send for OnceSpinLock<T> {}
+unsafe impl<T> Sync for OnceSpinLock<T> {}
