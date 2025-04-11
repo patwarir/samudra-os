@@ -27,7 +27,7 @@ impl SpinLock {
 pub struct OnceSpinLock<T> {
     lock: SpinLock,
     initialized: AtomicBool,
-    value: UnsafeCell<T>,
+    value: UnsafeCell<Option<T>>,
 }
 
 impl<T> OnceSpinLock<T> {
@@ -35,13 +35,13 @@ impl<T> OnceSpinLock<T> {
         Self {
             lock: SpinLock::new(),
             initialized: AtomicBool::new(false),
-            value: UnsafeCell::new(unsafe { core::mem::zeroed() }),
+            value: UnsafeCell::new(None),
         }
     }
 
     pub fn get(&self) -> Option<&T> {
         if self.initialized.load(Ordering::Acquire) {
-            Some(unsafe { &*self.value.get() })
+            unsafe { (*self.value.get()).as_ref() }
         } else {
             None
         }
@@ -54,7 +54,7 @@ impl<T> OnceSpinLock<T> {
             Err(value)
         } else {
             unsafe {
-                core::ptr::write(self.value.get(), value);
+                *self.value.get() = Some(value);
             }
             self.initialized.store(true, Ordering::Release);
             self.lock.release();

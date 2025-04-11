@@ -46,28 +46,19 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
     system_control::k_poweroff();
 }
 
-fn setup_csrs() {
-    use riscv::register::mstatus;
-
-    unsafe {
-        mstatus::set_mpp(mstatus::MPP::Machine);
-
-        mstatus::set_fs(mstatus::FS::Initial);
-        mstatus::set_vs(mstatus::VS::Initial);
-    }
-}
-
 fn zero_bss() {
+    use core::ffi::c_void;
+
     unsafe extern "C" {
         #[link_name = "__bss_start"]
-        unsafe static mut BSS_START: core::ffi::c_void;
+        unsafe static BSS_START: c_void;
         #[link_name = "__bss_end"]
-        unsafe static mut BSS_END: core::ffi::c_void;
+        unsafe static BSS_END: c_void;
     }
 
     unsafe {
-        let mut ptr = &raw mut BSS_START as usize;
-        let end = &raw mut BSS_END as usize;
+        let mut ptr = (&BSS_START as *const c_void) as usize;
+        let end = (&BSS_END as *const c_void) as usize;
 
         assert!(ptr <= end);
 
@@ -107,16 +98,31 @@ fn parse_device_tree(fdtb_ptr: usize) {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn k_main() -> ! {
-    use riscv::register::{mhartid, mscratch};
+    use riscv::register::{mhartid, mscratch, mstatus};
 
-    if mhartid::read() != 0 {
+    unsafe {
+        mstatus::set_mpp(mstatus::MPP::Machine);
+
+        mstatus::set_fs(mstatus::FS::Initial);
+        mstatus::set_vs(mstatus::VS::Initial);
+    }
+
+    const INIT_HART_ID: usize = 0;
+    if mhartid::read() != INIT_HART_ID {
         // Halt if not init hart
         k_hart_halt();
     }
 
-    setup_csrs();
+    unsafe {
+        mstatus::clear_mie();
+    }
+
     zero_bss();
     parse_device_tree(mscratch::read());
+
+    unsafe {
+        memory::init();
+    }
 
     // TODO: Setup TLS + MIE (interrupts)
 
