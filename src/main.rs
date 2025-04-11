@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
 
+extern crate alloc;
+
 #[unsafe(no_mangle)]
 pub static K_STACK_SIZE_PER_HART_BYTES: usize = 256 * 1024;
 

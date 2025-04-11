@@ -5,6 +5,7 @@ use core::fmt;
 pub const NEWLINE: &str = "\r\n";
 
 /// SAFETY: Assumes the IO lock is already acquired
+#[derive(Debug)]
 struct Uart;
 
 impl Uart {

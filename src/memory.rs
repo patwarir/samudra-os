@@ -1,6 +1,9 @@
-use crate::concurrency::OnceSpinLock;
-use crate::fdtb_variables;
+use crate::concurrency::{OnceSpinLock, SpinLock};
+use crate::{fdtb_variables, k_println};
+use core::alloc::Layout;
 use core::ffi::c_void;
+use core::ptr::NonNull;
+use talc::{ErrOnOom, Span, Talc, Talck};
 
 unsafe extern "C" {
     #[link_name = "__memory_start"]
@@ -11,6 +14,8 @@ pub static STACK_END: OnceSpinLock<usize> = OnceSpinLock::new();
 
 static HEAP_START: OnceSpinLock<usize> = OnceSpinLock::new();
 static HEAP_END: OnceSpinLock<usize> = OnceSpinLock::new();
+
+static TALCK_ALLOCATOR: OnceSpinLock<Talck<SpinLock, ErrOnOom>> = OnceSpinLock::new();
 
 fn align_to_next_multiple<const N: usize>(addr: usize) -> usize {
     let mask = N - 1;
@@ -52,4 +57,66 @@ pub unsafe fn init() {
         heap_start < heap_end,
         "Heap start must be less than heap end!"
     );
+
+    k_println!("Memory start: {:#x}", memory_start);
+
+    k_println!("Stack end: {:#x}", stack_end);
+    k_println!("TLS end: {:#x}", tls_end);
+
+    k_println!("Heap start: {:#x}", heap_start);
+    k_println!("Heap end: {:#x}", heap_end);
+
+    let talck = Talc::new(ErrOnOom).lock::<SpinLock>();
+
+    unsafe {
+        talck
+            .lock()
+            .claim(Span::new(
+                heap_start as *mut u8,
+                (heap_end - (tls_end - memory_start)) as *mut u8,
+            ))
+            .expect("Failed to claim heap span!");
+    }
+
+    if let Ok(_) = TALCK_ALLOCATOR.set(talck) {
+        k_println!("Allocator initialized!");
+    } else {
+        panic!("Failed to set TALCK_ALLOCATOR!");
+    }
 }
+
+#[derive(Debug)]
+struct Allocator;
+
+impl Allocator {
+    pub const fn new() -> Self {
+        Self
+    }
+}
+
+unsafe impl core::alloc::GlobalAlloc for Allocator {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        unsafe {
+            TALCK_ALLOCATOR
+                .get()
+                .expect("TALCK_ALLOCATOR not initialized!")
+                .lock()
+                .malloc(layout)
+                .expect("Failed to allocate memory!")
+                .as_ptr()
+        }
+    }
+
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+        unsafe {
+            TALCK_ALLOCATOR
+                .get()
+                .expect("TALCK_ALLOCATOR not initialized!")
+                .lock()
+                .free(NonNull::new(ptr).expect("Invalid pointer!"), layout)
+        }
+    }
+}
+
+#[global_allocator]
+static ALLOCATOR: Allocator = Allocator::new();

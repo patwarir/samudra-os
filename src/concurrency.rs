@@ -1,6 +1,7 @@
 use core::cell::UnsafeCell;
 use core::sync::atomic::{AtomicBool, Ordering};
 
+#[derive(Debug)]
 #[repr(transparent)]
 pub struct SpinLock(AtomicBool);
 
@@ -10,6 +11,7 @@ impl SpinLock {
     }
 
     pub fn try_acquire(&self) -> bool {
+        // TODO: Keep track of the thread that acquired the lock
         !self.0.swap(true, Ordering::Acquire)
     }
 
@@ -24,6 +26,25 @@ impl SpinLock {
     }
 }
 
+unsafe impl lock_api::RawMutex for SpinLock {
+    const INIT: Self = Self::new();
+
+    type GuardMarker = lock_api::GuardNoSend;
+
+    fn try_lock(&self) -> bool {
+        self.try_acquire()
+    }
+
+    fn lock(&self) {
+        self.acquire();
+    }
+
+    unsafe fn unlock(&self) {
+        self.release();
+    }
+}
+
+#[derive(Debug)]
 pub struct OnceSpinLock<T> {
     lock: SpinLock,
     initialized: AtomicBool,

@@ -20,5 +20,8 @@ lto = "fat"
 opt-level = 3
 
 [dependencies]
+allocator-api2 = { version = "0.2.21", default-features = false, features = ["alloc", "fresh-rust"] }
 fdt = { version = "0.1.5", features = ["pretty-printing"] }
+lock_api = "0.4.12"
 riscv = "0.13.0"
+talc = { version = "4.4.2", default-features = false, features = ["allocator-api2", "lock_api"] }
