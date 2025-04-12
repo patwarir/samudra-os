@@ -1,6 +1,7 @@
-use crate::concurrency::SpinLock;
+use crate::concurrency::RawSpinLock;
 use core::ffi::c_uchar;
 use core::fmt;
+use lock_api::RawMutex;
 
 pub const NEWLINE: &str = "\r\n";
 
@@ -47,18 +48,20 @@ impl fmt::Write for Uart {
     }
 }
 
-static IO_LOCK: SpinLock = SpinLock::new();
+static IO_LOCK: RawSpinLock = RawSpinLock::INIT;
 
 pub unsafe fn io_lock_try_acquire() -> bool {
-    IO_LOCK.try_acquire()
+    IO_LOCK.try_lock()
 }
 
 pub unsafe fn io_lock_acquire() {
-    IO_LOCK.acquire();
+    IO_LOCK.lock();
 }
 
 pub unsafe fn io_lock_release() {
-    IO_LOCK.release();
+    unsafe {
+        IO_LOCK.unlock();
+    }
 }
 
 /// SAFETY: Assumes the IO lock is already acquired

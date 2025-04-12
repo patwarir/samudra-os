@@ -1,4 +1,4 @@
-use crate::concurrency::{OnceSpinLock, SpinLock};
+use crate::concurrency::{OnceSpinLock, RawSpinLock};
 use crate::{fdtb_variables, k_println};
 use core::alloc::Layout;
 use core::ffi::c_void;
@@ -15,7 +15,7 @@ pub static STACK_END: OnceSpinLock<usize> = OnceSpinLock::new();
 static HEAP_START: OnceSpinLock<usize> = OnceSpinLock::new();
 static HEAP_END: OnceSpinLock<usize> = OnceSpinLock::new();
 
-static TALCK_ALLOCATOR: OnceSpinLock<Talck<SpinLock, ErrOnOom>> = OnceSpinLock::new();
+static TALCK_ALLOCATOR: OnceSpinLock<Talck<RawSpinLock, ErrOnOom>> = OnceSpinLock::new();
 
 fn align_to_next_multiple<const N: usize>(addr: usize) -> usize {
     let mask = N - 1;
@@ -66,7 +66,7 @@ pub unsafe fn init() {
     k_println!("Heap start: {:#x}", heap_start);
     k_println!("Heap end: {:#x}", heap_end);
 
-    let talck = Talc::new(ErrOnOom).lock::<SpinLock>();
+    let talck = Talc::new(ErrOnOom).lock::<RawSpinLock>();
 
     unsafe {
         talck

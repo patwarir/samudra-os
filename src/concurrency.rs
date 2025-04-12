@@ -1,52 +1,38 @@
 use core::cell::UnsafeCell;
 use core::sync::atomic::{AtomicBool, Ordering};
+use lock_api::{GuardNoSend, Mutex, RawMutex};
+
+// TODO: Keep track of the thread that acquired the lock
 
 #[derive(Debug)]
 #[repr(transparent)]
-pub struct SpinLock(AtomicBool);
+pub struct RawSpinLock(AtomicBool);
 
-impl SpinLock {
-    pub const fn new() -> Self {
-        Self(AtomicBool::new(false))
-    }
+unsafe impl RawMutex for RawSpinLock {
+    const INIT: Self = Self(AtomicBool::new(false));
 
-    pub fn try_acquire(&self) -> bool {
-        // TODO: Keep track of the thread that acquired the lock
+    type GuardMarker = GuardNoSend;
+
+    fn try_lock(&self) -> bool {
         !self.0.swap(true, Ordering::Acquire)
     }
 
-    pub fn acquire(&self) {
-        while !self.try_acquire() {
+    fn lock(&self) {
+        while !self.try_lock() {
             core::hint::spin_loop();
         }
     }
 
-    pub fn release(&self) {
+    unsafe fn unlock(&self) {
         self.0.store(false, Ordering::Release);
     }
 }
 
-unsafe impl lock_api::RawMutex for SpinLock {
-    const INIT: Self = Self::new();
-
-    type GuardMarker = lock_api::GuardNoSend;
-
-    fn try_lock(&self) -> bool {
-        self.try_acquire()
-    }
-
-    fn lock(&self) {
-        self.acquire();
-    }
-
-    unsafe fn unlock(&self) {
-        self.release();
-    }
-}
+pub type MutexSpinLock<T> = Mutex<RawSpinLock, T>;
 
 #[derive(Debug)]
 pub struct OnceSpinLock<T> {
-    lock: SpinLock,
+    lock: RawSpinLock,
     initialized: AtomicBool,
     value: UnsafeCell<Option<T>>,
 }
@@ -54,7 +40,7 @@ pub struct OnceSpinLock<T> {
 impl<T> OnceSpinLock<T> {
     pub const fn new() -> Self {
         Self {
-            lock: SpinLock::new(),
+            lock: RawSpinLock::INIT,
             initialized: AtomicBool::new(false),
             value: UnsafeCell::new(None),
         }
@@ -69,16 +55,20 @@ impl<T> OnceSpinLock<T> {
     }
 
     pub fn set(&self, value: T) -> Result<(), T> {
-        self.lock.acquire();
+        self.lock.lock();
         if self.initialized.load(Ordering::Acquire) {
-            self.lock.release();
+            unsafe {
+                self.lock.unlock();
+            }
             Err(value)
         } else {
             unsafe {
                 *self.value.get() = Some(value);
             }
             self.initialized.store(true, Ordering::Release);
-            self.lock.release();
+            unsafe {
+                self.lock.unlock();
+            }
             Ok(())
         }
     }
