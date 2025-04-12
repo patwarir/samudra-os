@@ -3,9 +3,11 @@
 
 extern crate alloc;
 
+#[unsafe(link_section = ".srodata")]
 #[unsafe(no_mangle)]
 pub static K_STACK_SIZE_PER_HART_BYTES: usize = 256 * 1024;
 
+#[unsafe(link_section = ".srodata")]
 #[unsafe(no_mangle)]
 pub static K_TLS_SIZE_PER_HART_BYTES: usize = 4 * 1024;
 
