@@ -28,7 +28,7 @@ SECTIONS {
         KEEP(*(.text.init .text.init.*));
         *(.text .text.*);
 
-        . = ALIGN(8);
+        . = ALIGN(0x10);
 
         PROVIDE(etext = .);
     } >ram AT>ram :text
@@ -38,18 +38,18 @@ SECTIONS {
         *(.rodata .rodata.*);
     } >ram AT>ram :rodata
 
-    . = ALIGN(16);
+    . = ALIGN(0x10);
 
     /* Pointer to make data access faster for small (ro)data */
     __global_pointer$ = . + 0x800;
 
     /* Small Global (readonly) Constants */
-    .srodata : ALIGN(8) {
+    .srodata : ALIGN(0x10) {
         *(.srodata .srodata.*);
     } >ram AT>ram :rodata
 
     /* Small Initialized Variables */
-    .sdata : ALIGN(8) {
+    .sdata : ALIGN(0x10) {
         *(.sdata .sdata.*);
     } >ram AT>ram :data
 
@@ -69,7 +69,7 @@ SECTIONS {
         *(.bss .bss.*);
         *(COMMON);
 
-        . = ALIGN(8);
+        . = ALIGN(0x10);
 
         __bss_end = .;
     } >ram AT>ram :bss

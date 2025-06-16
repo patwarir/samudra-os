@@ -14,7 +14,6 @@ pub static K_TLS_SIZE_PER_HART_BYTES: usize = 4 * 1024;
 core::arch::global_asm!(core::include_str!("./asm/boot.S"));
 core::arch::global_asm!(core::include_str!("./asm/trap.S"));
 
-mod concurrency;
 mod memory;
 mod system_control;
 mod uart;
@@ -75,10 +74,10 @@ fn zero_bss() {
 
 /// SAFETY: Initialized by `parse_device_tree`
 mod fdtb_variables {
-    use crate::concurrency::OnceSpinLock;
+    use spin::Once;
 
-    pub static NUM_HARTS: OnceSpinLock<usize> = OnceSpinLock::new();
-    pub static MEMORY_SIZE_BYTES: OnceSpinLock<usize> = OnceSpinLock::new();
+    pub static NUM_HARTS: Once<usize> = Once::new();
+    pub static MEMORY_SIZE_BYTES: Once<usize> = Once::new();
 }
 
 /// Initializes device tree variables from FDTB stored in big-endian format
@@ -86,18 +85,13 @@ mod fdtb_variables {
 fn parse_device_tree(fdtb_ptr: usize) {
     let fdtb = unsafe { fdt::Fdt::from_ptr(fdtb_ptr as *const u8) }.expect("Invalid FDTB pointer!");
 
-    fdtb_variables::NUM_HARTS
-        .set(fdtb.cpus().count())
-        .expect("Failed to set NUM_HARTS!");
-
-    fdtb_variables::MEMORY_SIZE_BYTES
-        .set(
-            fdtb.memory()
-                .regions()
-                .map(|region| region.size.unwrap_or(0))
-                .sum(),
-        )
-        .expect("Failed to set MEMORY_SIZE_BYTES!");
+    fdtb_variables::NUM_HARTS.call_once(|| fdtb.cpus().count());
+    fdtb_variables::MEMORY_SIZE_BYTES.call_once(|| {
+        fdtb.memory()
+            .regions()
+            .map(|region| region.size.unwrap_or(0))
+            .sum()
+    });
 }
 
 #[unsafe(no_mangle)]

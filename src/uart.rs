@@ -1,7 +1,7 @@
-use crate::concurrency::RawSpinLock;
 use core::ffi::c_uchar;
 use core::fmt;
 use lock_api::RawMutex;
+use spin::Mutex;
 
 pub const NEWLINE: &str = "\r\n";
 
@@ -48,10 +48,10 @@ impl fmt::Write for Uart {
     }
 }
 
-static IO_LOCK: RawSpinLock = RawSpinLock::INIT;
+static IO_LOCK: Mutex<()> = Mutex::new(());
 
 pub unsafe fn io_lock_try_acquire() -> bool {
-    IO_LOCK.try_lock()
+    <Mutex<()> as RawMutex>::try_lock(&IO_LOCK)
 }
 
 pub unsafe fn io_lock_acquire() {

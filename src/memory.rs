@@ -1,8 +1,10 @@
-use crate::concurrency::{OnceSpinLock, RawSpinLock};
 use crate::{fdtb_variables, k_println};
+use alloc::sync::Arc;
+use alloc::vec::Vec;
 use core::alloc::Layout;
 use core::ffi::c_void;
 use core::ptr::NonNull;
+use spin::{Mutex, Once};
 use talc::{ErrOnOom, Span, Talc, Talck};
 
 unsafe extern "C" {
@@ -10,12 +12,8 @@ unsafe extern "C" {
     unsafe static MEMORY_START: c_void;
 }
 
-pub static STACK_END: OnceSpinLock<usize> = OnceSpinLock::new();
-
-static HEAP_START: OnceSpinLock<usize> = OnceSpinLock::new();
-static HEAP_END: OnceSpinLock<usize> = OnceSpinLock::new();
-
-static TALCK_ALLOCATOR: OnceSpinLock<Talck<RawSpinLock, ErrOnOom>> = OnceSpinLock::new();
+static TALCK_ALLOCATOR: Once<Talck<Mutex<()>, ErrOnOom>> = Once::new();
+static TLS_TALCK_ALLOCATORS: Once<Arc<[Talck<Mutex<()>, ErrOnOom>]>> = Once::new();
 
 fn align_to_next_multiple<const N: usize>(addr: usize) -> usize {
     let mask = N - 1;
@@ -29,8 +27,6 @@ pub unsafe fn init() {
         .expect("NUM_HARTS not initialized!");
 
     let stack_end = memory_start + (num_harts * crate::K_STACK_SIZE_PER_HART_BYTES);
-    STACK_END.set(stack_end).expect("Failed to set STACK_END!");
-
     let tls_end = stack_end + (num_harts * crate::K_TLS_SIZE_PER_HART_BYTES);
 
     const K_STACK_MEMORY_SLACK_BYTES: usize = 0x10;
@@ -39,19 +35,16 @@ pub unsafe fn init() {
     let heap_start = align_to_next_multiple::<K_HEAP_START_ALIGNMENT_BYTES>(
         tls_end + K_STACK_MEMORY_SLACK_BYTES,
     );
+
     assert!(
         heap_start % K_HEAP_START_ALIGNMENT_BYTES == 0,
         "Heap start must be aligned to 4KiB!"
     );
-    HEAP_START
-        .set(heap_start)
-        .expect("Failed to set HEAP_START!");
 
     let heap_end = memory_start
         + fdtb_variables::MEMORY_SIZE_BYTES
             .get()
             .expect("MEMORY_SIZE_BYTES not initialized!");
-    HEAP_END.set(heap_end).expect("Failed to set HEAP_END!");
 
     assert!(
         heap_start < heap_end,
@@ -66,8 +59,7 @@ pub unsafe fn init() {
     k_println!("Heap start: {:#x}", heap_start);
     k_println!("Heap end: {:#x}", heap_end);
 
-    let talck = Talc::new(ErrOnOom).lock::<RawSpinLock>();
-
+    let talck = Talc::new(ErrOnOom).lock::<Mutex<()>>();
     unsafe {
         talck
             .lock()
@@ -77,12 +69,25 @@ pub unsafe fn init() {
             ))
             .expect("Failed to claim heap span!");
     }
+    TALCK_ALLOCATOR.call_once(|| talck);
 
-    if let Ok(_) = TALCK_ALLOCATOR.set(talck) {
-        k_println!("Allocator initialized!");
-    } else {
-        panic!("Failed to set TALCK_ALLOCATOR!");
+    let mut tls_talcks = Vec::with_capacity(*num_harts);
+    for i in 0..*num_harts {
+        let tls_start = stack_end + (i * crate::K_TLS_SIZE_PER_HART_BYTES);
+        let tls_end = tls_start + crate::K_TLS_SIZE_PER_HART_BYTES;
+
+        let talck = Talc::new(ErrOnOom).lock::<Mutex<()>>();
+
+        unsafe {
+            talck
+                .lock()
+                .claim(Span::new(tls_start as *mut u8, tls_end as *mut u8))
+                .expect("Failed to claim TLS span!");
+        }
+
+        tls_talcks.push(talck);
     }
+    TLS_TALCK_ALLOCATORS.call_once(|| Arc::from(tls_talcks));
 }
 
 #[derive(Debug)]
@@ -120,3 +125,29 @@ unsafe impl core::alloc::GlobalAlloc for Allocator {
 
 #[global_allocator]
 static ALLOCATOR: Allocator = Allocator::new();
+
+pub fn alloc_tls(hart_id: usize, layout: Layout) -> Result<NonNull<u8>, ()> {
+    let tls_talcks = TLS_TALCK_ALLOCATORS
+        .get()
+        .expect("TLS_TALCK_ALLOCATORS not initialized!");
+
+    if hart_id >= tls_talcks.len() {
+        return Err(());
+    }
+
+    unsafe { tls_talcks[hart_id].lock().malloc(layout) }
+}
+
+pub fn dealloc_tls(hart_id: usize, ptr: NonNull<u8>, layout: Layout) {
+    let tls_talcks = TLS_TALCK_ALLOCATORS
+        .get()
+        .expect("TLS_TALCK_ALLOCATORS not initialized!");
+
+    if hart_id >= tls_talcks.len() {
+        return;
+    }
+
+    unsafe {
+        tls_talcks[hart_id].lock().free(ptr, layout);
+    }
+}
