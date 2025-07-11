@@ -17,6 +17,7 @@ core::arch::global_asm!(core::include_str!("./asm/trap.S"));
 mod memory;
 mod system_control;
 mod uart;
+mod wasm;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn k_hart_halt() -> ! {
